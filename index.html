@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wayfinder's Companion 🧭👨‍🦯🏠</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        /* Basic Reset */
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.5s ease, color 0.5s ease;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Theme Variables */
+        :root {
+            --bg-color: #f0f9ff; --text-color: #0c4a6e; --primary-color: #38bdf8; --secondary-color: #fbbf24; --accent-color: #ec4899; --container-bg: #ffffff; --border-color: #e0f2fe; --button-bg: var(--primary-color); --button-text: white; --button-hover-bg: #0ea5e9; --shadow-color: rgba(56, 189, 248, 0.3); --twin-line-offset: 4px; --twin-line-color: var(--text-color);
+            --success-color: #22c55e; --error-color: #ef4444; --feedback-warm-color: #f59e0b; --feedback-cold-color: #60a5fa;
+            --man-color: var(--accent-color); 
+            --house-color: var(--success-color); 
+            --start-marker-color: var(--primary-color);
+        }
+        .theme-dark {
+            --bg-color: #1f2937; --text-color: #f3f4f6; --primary-color: #60a5fa; --secondary-color: #facc15; --accent-color: #f472b6; --container-bg: #374151; --border-color: #4b5563; --button-hover-bg: #3b82f6; --shadow-color: rgba(96, 165, 250, 0.3); --twin-line-color: var(--text-color);
+            --success-color: #4ade80; --error-color: #f87171; --feedback-warm-color: #fcd34d; --feedback-cold-color: #93c5fd;
+        }
+        .theme-sunset {
+            --bg-color: #fff7ed; --text-color: #7c2d12; --primary-color: #f97316; --secondary-color: #ec4899; --accent-color: #8b5cf6; --container-bg: #ffedd5; --border-color: #fed7aa; --button-hover-bg: #ea580c; --shadow-color: rgba(249, 115, 22, 0.3); --twin-line-color: var(--text-color);
+            --success-color: #84cc16; --error-color: #f97316; --feedback-warm-color: #fb923c; --feedback-cold-color: #a5b4fc;
+        }
+        .theme-forest {
+            --bg-color: #f0fdf4; --text-color: #14532d; --primary-color: #22c55e; --secondary-color: #a3e635; --accent-color: #f59e0b; --container-bg: #dcfce7; --border-color: #bbf7d0; --button-hover-bg: #16a34a; --shadow-color: rgba(34, 197, 94, 0.3); --twin-line-color: var(--text-color);
+            --success-color: #16a34a; --error-color: #dc2626; --feedback-warm-color: #ca8a04; --feedback-cold-color: #7dd3fc;
+        }
+        .theme-ocean {
+            --bg-color: #eff6ff; --text-color: #1e3a8a; --primary-color: #3b82f6; --secondary-color: #10b981; --accent-color: #6366f1; --container-bg: #dbeafe; --border-color: #bfdbfe; --button-hover-bg: #2563eb; --shadow-color: rgba(59, 130, 246, 0.3); --twin-line-color: var(--text-color);
+            --success-color: #10b981; --error-color: #f43f5e; --feedback-warm-color: #2dd4bf; --feedback-cold-color: #38bdf8;
+        }
+        .theme-candy {
+            --bg-color: #fdf2f8; --text-color: #831843; --primary-color: #ec4899; --secondary-color: #a855f7; --accent-color: #22d3ee; --container-bg: #fce7f3; --border-color: #fbcfe8; --button-hover-bg: #db2777; --shadow-color: rgba(236, 72, 153, 0.3); --twin-line-color: var(--text-color);
+            --success-color: #a855f7; --error-color: #e11d48; --feedback-warm-color: #f472b6; --feedback-cold-color: #7dd3fc;
+        }
+        .theme-arcade {
+            --bg-color: #1a1a2e; --text-color: #00ff00; --primary-color: #ff00ff; --secondary-color: #ffff00; --accent-color: #00ffff; --container-bg: #2a2a3e; --border-color: #4a4a5e; --button-text: #1a1a2e; --button-hover-bg: #e000e0; --shadow-color: rgba(255, 0, 255, 0.4); --twin-line-color: var(--text-color);
+            --success-color: #00ff00; --error-color: #ff3333; --feedback-warm-color: #ffff00; --feedback-cold-color: #00ffff;
+        }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 1rem; padding-top: 5rem; box-sizing: border-box;
+        }
+        .theme-selector-container {
+            position: fixed; top: 1rem; right: 1rem; background-color: var(--container-bg); padding: 0.5rem; border-radius: 10px; box-shadow: 0 6px 12px var(--shadow-color); border: 2px solid var(--border-color); z-index: 1000; width: auto; max-width: 200px;
+        }
+        /* ... (rest of theme selector CSS remains the same) ... */
+        .theme-selector-container::before, .theme-selector-container::after { content: ''; position: absolute; border-radius: 10px; border: 1px solid var(--twin-line-color); transition: all 0.3s ease-in-out; z-index: -1; }
+        .theme-selector-container::before { top: calc(-0.5 * var(--twin-line-offset)); left: calc(-0.5 * var(--twin-line-offset)); right: calc(-0.5 * var(--twin-line-offset)); bottom: calc(-0.5 * var(--twin-line-offset)); opacity: 0.5; }
+        .theme-selector-container::after { top: calc(-1 * var(--twin-line-offset)); left: calc(-1 * var(--twin-line-offset)); right: calc(-1 * var(--twin-line-offset)); bottom: calc(-1 * var(--twin-line-offset)); opacity: 0.25; }
+        .theme-selector {
+             padding: 0.4rem 0.8rem; border-radius: 6px; border: 1px solid var(--primary-color); background-color: var(--bg-color); color: var(--text-color); font-weight: 500; cursor: pointer; transition: background-color 0.3s ease, border-color 0.3s ease; width: 100%; font-size: 0.9rem; 
+        }
+        .theme-selector:focus { outline: none; box-shadow: 0 0 0 2px var(--primary-color); }
+
+        .game-container {
+            background-color: var(--container-bg); padding: 2rem; border-radius: 16px; box-shadow: 0 10px 25px var(--shadow-color); width: 90%; max-width: 650px; text-align: center; border: 2px solid var(--border-color); margin-top: 1rem; position: relative; animation: fadeInScaleUp 0.8s ease-out forwards;
+        }
+        /* ... (rest of game container CSS remains the same) ... */
+        .game-container::before, .game-container::after { content: ''; position: absolute; border-radius: 16px; border: 2px solid var(--twin-line-color); transition: all 0.3s ease-in-out; }
+        .game-container::before { top: calc(-1 * var(--twin-line-offset)); left: calc(-1 * var(--twin-line-offset)); right: calc(-1 * var(--twin-line-offset)); bottom: calc(-1 * var(--twin-line-offset)); z-index: -1; opacity: 0.6; }
+        .game-container::after { top: calc(-2 * var(--twin-line-offset)); left: calc(-2 * var(--twin-line-offset)); right: calc(-2 * var(--twin-line-offset)); bottom: calc(-2 * var(--twin-line-offset)); z-index: -2; opacity: 0.3; }
+        @keyframes fadeInScaleUp { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 0.5rem; /* Adjust as needed */
+        }
+        .game-title {
+            font-size: 2.2rem; font-weight: 700; color: var(--primary-color); padding-top: 1rem; animation: slideInDown 0.6s ease-out forwards;
+            flex-grow: 1; /* Allow title to take space */
+            text-align: left; /* Align title to left if mute button is on right */
+        }
+        @keyframes slideInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        
+        #muteBtn {
+            background-color: var(--secondary-color);
+            color: var(--button-text);
+            border: none;
+            border-radius: 50%; /* Circular button */
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+        #muteBtn:hover {
+            transform: scale(1.1);
+        }
+
+        #levelDisplay {
+            font-size: 1.2rem; font-weight: 600; color: var(--secondary-color); margin-bottom: 0.75rem;
+        }
+        #feedbackArea {
+            margin-bottom: 1rem; padding: 0.75rem; border-radius: 8px; background-color: var(--bg-color); border: 2px dashed var(--secondary-color); min-height: 40px; font-size: 1.1rem; font-weight: 600; color: var(--text-color); display: flex; align-items: center; justify-content: center; transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        #mazeCanvasContainer {
+            width: 100%; max-width: 600px; height: 400px; margin: 0 auto 1.5rem auto; border: 3px solid var(--primary-color); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.1); position: relative; background-color: var(--bg-color); 
+        }
+         #mazeCanvasContainer canvas { display: block; border-radius: 9px; }
+
+        .game-controls button {
+            background-color: var(--button-bg); color: var(--button-text); padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease; margin: 0.25rem; box-shadow: 0 4px 6px var(--shadow-color); position: relative; border: 2px solid transparent;
+        }
+        /* ... (rest of button CSS remains the same) ... */
+        .game-controls button::before { content: ''; position: absolute; top: -3px; left: -3px; right: -3px; bottom: -3px; border: 2px solid var(--accent-color); border-radius: 10px; opacity: 0; transition: opacity 0.3s ease; z-index: -1; }
+        .game-controls button:hover::before { opacity: 1; }
+        .game-controls button:hover { background-color: var(--button-hover-bg); transform: translateY(-3px) scale(1.05); box-shadow: 0 6px 12px var(--shadow-color); }
+        .game-controls button:active { transform: translateY(-1px) scale(1.02); }
+        .game-controls button:disabled { background-color: #9ca3af; cursor: not-allowed; opacity: 0.7;}
+
+
+        .footer {
+            margin-top: auto; padding: 1.5rem 1rem; text-align: center; font-size: 0.9rem; color: var(--text-color); width: 100%; background-color: var(--container-bg); border-top: 2px solid var(--border-color); box-shadow: 0 -4px 10px var(--shadow-color); opacity: 0.8; transition: opacity 0.3s ease;
+        }
+        .footer:hover{ opacity: 1; }
+
+        @media (max-width: 768px) {
+            .game-title { font-size: 1.8rem; text-align: center; margin-bottom: 0.5rem;} /* Center title on smaller screens */
+            .game-header { flex-direction: column-reverse; align-items: center; } /* Stack mute button below title */
+            #muteBtn { margin-bottom: 0.75rem; }
+            .game-container { width: 95%; padding: 1.5rem; margin-top: 1rem; max-width: 95%;}
+            #mazeCanvasContainer { height: 350px; }
+            .game-controls { display: flex; flex-direction: column; align-items: center;}
+            .game-controls button { width: 80%; margin: 0.3rem 0; }
+        }
+        @media (max-width: 480px) {
+            body { padding-top: 4.5rem; }
+            .game-title { font-size: 1.6rem; }
+            .game-controls button { padding: 0.6rem 1.2rem; font-size: 0.9rem; width: 90%; }
+            .game-container { padding: 1rem; }
+            #mazeCanvasContainer { height: 300px; }
+            #feedbackArea { font-size: 1rem; }
+            #levelDisplay { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="theme-selector-container">
+        <select id="themeSwitcher" class="theme-selector" aria-label="Select Theme">
+            <option value="default">Default Bright</option>
+            <option value="theme-dark">Dark Mode 🌙</option>
+            <option value="theme-sunset">Sunset Glow 🌅</option>
+            <option value="theme-forest">Forest Whisper 🌲</option>
+            <option value="theme-ocean">Ocean Deep 🌊</option>
+            <option value="theme-candy">Candy Pop 🍭</option>
+            <option value="theme-arcade">Retro Arcade 👾</option>
+        </select>
+    </div>
+
+    <div class="game-container">
+        <div class="game-header">
+            <h1 class="game-title">Wayfinder's Companion 🧭👨‍🦯🏠</h1>
+            <button id="muteBtn" title="Toggle Sound">🔈</button>
+        </div>
+        <div id="levelDisplay">Level: -/-</div>
+        <div id="feedbackArea">Guide the man to his house!</div>
+        
+        <div id="mazeCanvasContainer">
+            </div>
+
+        <div class="game-controls" style="margin-top: 1rem;">
+            <button id="startGameBtn" class="game-button">Start Game ✨</button>
+            <button id="resetLevelBtn" class="game-button">Restart Level 🔄</button>
+            <button id="nextLevelBtn" class="game-button" style="display: none;">Next Level ➡️</button>
+        </div>
+    </div>
+
+    <footer class="footer">
+        © 2025 ToolForge. All rights reserved. Built with ❤️ by Anas.
+    </footer>
+
+    <script>
+        // Theme Switcher Logic
+        const themeSwitcher = document.getElementById('themeSwitcher');
+        const bodyEl = document.body; 
+        const savedTheme = localStorage.getItem('selectedTheme') || 'default';
+        bodyEl.className = savedTheme !== 'default' ? savedTheme : '';
+        themeSwitcher.value = savedTheme;
+        
+        const muteBtn = document.getElementById('muteBtn');
+        let isMuted = localStorage.getItem('isMuted') === 'true';
+
+
+        function playSound(type, note, duration, time) {
+            if (isMuted || !synth) return;
+            try {
+                if (type === 'click') synth.triggerAttackRelease(note || "C4", duration || "16n", time || Tone.now());
+                else if (type === 'win') {
+                    const now = Tone.now();
+                    synth.triggerAttackRelease("C5", "8n", now);
+                    synth.triggerAttackRelease("E5", "8n", now + 0.15);
+                    synth.triggerAttackRelease("G5", "8n", now + 0.3);
+                } else if (type === 'drag_start') {
+                    synth.triggerAttackRelease(note || "A3", duration || "32n", time || Tone.now());
+                }
+            } catch (e) {
+                console.warn("Tone.js error playing sound:", e);
+            }
+        }
+        
+        themeSwitcher.addEventListener('change', function() {
+            bodyEl.className = '';
+            if (this.value !== 'default') { bodyEl.classList.add(this.value); }
+            localStorage.setItem('selectedTheme', this.value);
+            if (typeof sketchInstance !== 'undefined' && sketchInstance.updateThemeColors) {
+                sketchInstance.updateThemeColors();
+            }
+            playSound('click', 'E4', '16n');
+        });
+
+        function updateMuteButtonVisual() {
+            muteBtn.textContent = isMuted ? '🔇' : '🔈';
+            muteBtn.title = isMuted ? 'Unmute Sound' : 'Mute Sound';
+        }
+        updateMuteButtonVisual(); // Initial state
+
+        muteBtn.addEventListener('click', () => {
+            isMuted = !isMuted;
+            if (typeof Tone !== 'undefined') {
+                Tone.Destination.mute = isMuted;
+            }
+            localStorage.setItem('isMuted', isMuted);
+            updateMuteButtonVisual();
+            // Play a sound only when unmuting, to confirm
+            if (!isMuted) playSound('click', 'G4', '16n');
+        });
+
+
+        // Game Elements
+        const startGameBtn = document.getElementById('startGameBtn');
+        const resetLevelBtn = document.getElementById('resetLevelBtn');
+        const nextLevelBtn = document.getElementById('nextLevelBtn');
+        const feedbackArea = document.getElementById('feedbackArea');
+        const levelDisplayEl = document.getElementById('levelDisplay');
+        const canvasContainer = document.getElementById('mazeCanvasContainer');
+        
+        let sketchInstance; 
+        let synth; 
+
+        // p5.js Sketch
+        const sketch = (p) => {
+            let playerPos; 
+            let mazePath = []; 
+            let startPoint, endPoint; 
+            let dragging = false;
+            let gameActive = false;
+            let playerReachedEnd = false;
+            let celebratingLevelWin = false; 
+            let celebrationTimer = 0; 
+            const celebrationDuration = 90; 
+            let sparkles = []; 
+
+            const playerRadius = 10; // Base radius for head
+            const pathThicknessBase = 20; 
+            let currentPathThickness; 
+            const goalProximity = 18; 
+
+            let C_BG, C_PRIMARY, C_ACCENT, C_TEXT, C_SUCCESS, C_FEEDBACK_WARM, C_FEEDBACK_COLD, C_MAN, C_HOUSE, C_START_MARKER;
+
+            let currentLevelIndex = 0;
+            const totalLevels = 12;
+            let levelsData = []; 
+
+
+            p.updateThemeColors = () => {
+                const styles = getComputedStyle(document.documentElement);
+                C_BG = p.color(styles.getPropertyValue('--bg-color').trim());
+                C_PRIMARY = p.color(styles.getPropertyValue('--primary-color').trim());
+                C_ACCENT = p.color(styles.getPropertyValue('--accent-color').trim());
+                C_TEXT = p.color(styles.getPropertyValue('--text-color').trim());
+                C_SUCCESS = p.color(styles.getPropertyValue('--success-color').trim());
+                C_FEEDBACK_WARM = p.color(styles.getPropertyValue('--feedback-warm-color').trim());
+                C_FEEDBACK_COLD = p.color(styles.getPropertyValue('--feedback-cold-color').trim());
+                C_MAN = p.color(styles.getPropertyValue('--man-color').trim());
+                C_HOUSE = p.color(styles.getPropertyValue('--house-color').trim());
+                C_START_MARKER = p.color(styles.getPropertyValue('--start-marker-color').trim());
+                if(p.canvas) p.background(C_BG); 
+            };
+
+            function defineLevels() {
+                const w = p.width;
+                const h = p.height;
+                const pad = 40; 
+
+                levelsData = [
+                    { path: [{x: pad, y: h/2}, {x: w-pad, y: h/2}], message: "A clear path to start his journey.", thicknessFactor: 1.0 },
+                    { path: [{x: pad, y: pad}, {x: w-pad, y: pad}, {x: w-pad, y: h-pad}], message: "Careful around the corner!", thicknessFactor: 1.0 },
+                    { path: [{x: pad, y: h/2}, {x: w/2, y: h/2}, {x: w/2, y: pad}, {x: w-pad, y: pad}], message: "A little detour ahead.", thicknessFactor: 0.95 },
+                    { path: [{x: pad, y: pad}, {x: w/3, y: pad}, {x: w/3, y: h-pad}, {x: 2*w/3, y: h-pad}, {x: 2*w/3, y: pad}, {x: w-pad, y: pad}], message: "This path winds a bit.", thicknessFactor: 0.95 },
+                    { path: [{x: pad, y: h/2}, {x: w/2-30, y: h/2}, {x: w/2-30, y: pad+20}, {x: w/2+30, y: pad+20}, {x: w/2+30, y: h/2}, {x: w-pad, y: h/2}], message: "Something's in the way, guide him around.", thicknessFactor: 0.9 },
+                    { path: [{x: pad, y: h-pad}, {x: pad, y: pad+20}, {x: w/2, y: pad+20}, {x: w/2, y: h/2}, {x: w-pad-20, y: h/2}, {x: w-pad-20, y: pad}], message: "A longer journey with a few twists.", thicknessFactor: 0.9 },
+                    { path: [{x: pad, y: pad}, {x: w/2-pad, y: h/2}, {x: w/2+pad, y: pad}, {x: w-pad, y: h-pad}], message: "Slanted paths can be tricky.", thicknessFactor: 0.85 },
+                    { path: [{x: w-pad, y: h/2}, {x: w/2+30, y: h/2}, {x: w/2+30, y: pad}, {x: w/2-30, y: pad}, {x: w/2-30, y: h-pad}, {x: pad, y: h-pad}], message: "A tighter squeeze on this route.", thicknessFactor: 0.8 },
+                    { path: [{x: w/2, y: h/2}, {x: w/2+50, y: h/2}, {x: w/2+50, y: h/2-50}, {x: w/2-50, y: h/2-50}, {x: w/2-50, y: h/2+50}, {x: pad, y: h/2+50}], message: "Feeling a bit dizzy?", thicknessFactor: 0.85 },
+                    { path: [{x: pad, y: pad}, {x: w/3, y: pad}, {x: w/3, y: h/3}, {x: 2*w/3, y: h/3}, {x: 2*w/3, y: 2*h/3}, {x: w/3, y: 2*h/3}, {x: w/3, y: h-pad}, {x: w-pad, y: h-pad}], message: "Quick turns, stay focused!", thicknessFactor: 0.75 },
+                    { path: [{x: pad, y: h/2}, {x: w-pad, y: h/2}, {x: w-pad, y: pad}, {x: pad, y: pad}, {x: pad, y: h-pad}, {x: w-pad, y: h-pad}], message: "This path loops back, follow carefully.", thicknessFactor: 0.8 },
+                    { path: [{x: pad, y: pad}, {x: w-pad, y: pad}, {x: w-pad, y: h/3}, {x: pad, y: h/3}, {x: pad, y: 2*h/3}, {x: w-pad, y: 2*h/3}, {x: w-pad, y: h-pad}, {x: pad, y: h-pad}], message: "The final stretch! Almost home.", thicknessFactor: 0.7 }
+                ];
+            }
+
+            p.setup = () => {
+                const canvasWidth = canvasContainer.offsetWidth;
+                const canvasHeight = canvasContainer.offsetHeight;
+                let cnv = p.createCanvas(canvasWidth, canvasHeight);
+                cnv.parent('mazeCanvasContainer'); 
+                p.updateThemeColors(); 
+                defineLevels(); 
+
+                playerPos = p.createVector(0, 0); 
+                p.noStroke();
+                updateLevelDisplay();
+                feedbackArea.textContent = "Help the man find his way home. Click 'Start Game'.";
+                resetLevelBtn.disabled = true;
+                nextLevelBtn.style.display = 'none';
+                
+                if (typeof Tone !== 'undefined') {
+                    synth = new Tone.Synth({
+                        oscillator: { type: "sine" },
+                        envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.3 }
+                    }).toDestination();
+                    Tone.Destination.mute = isMuted; // Apply initial mute state
+                } else {
+                    console.warn("Tone.js not loaded. Sound effects will be unavailable.");
+                }
+            };
+            
+            function startCelebration() {
+                celebratingLevelWin = true;
+                celebrationTimer = celebrationDuration;
+                sparkles = []; 
+                for (let i = 0; i < 30; i++) { 
+                    sparkles.push({
+                        x: endPoint.x, // Sparkles emanate from the house center
+                        y: endPoint.y,
+                        vx: p.random(-2, 2), // Spread out more
+                        vy: p.random(-2, 2),
+                        alpha: 255,
+                        size: p.random(2, 6) // Smaller sparkles
+                    });
+                }
+                playSound('win'); // Uses the global playSound function
+            }
+
+
+            function loadLevel(levelIdx) {
+                if (levelIdx >= totalLevels) {
+                    gameWonAllLevels();
+                    return;
+                }
+                currentLevelIndex = levelIdx;
+                const level = levelsData[currentLevelIndex];
+                
+                mazePath = level.path.map(pt => p.createVector(pt.x, pt.y));
+                startPoint = mazePath[0].copy();
+                endPoint = mazePath[mazePath.length - 1].copy();
+                
+                playerPos.set(startPoint); 
+                playerReachedEnd = false;
+                gameActive = true;
+                celebratingLevelWin = false; 
+                
+                currentPathThickness = pathThicknessBase * (level.thicknessFactor || 1.0);
+
+                updateLevelDisplay();
+                feedbackArea.textContent = level.message || `Guide him carefully on Level ${currentLevelIndex + 1}.`;
+                startGameBtn.textContent = "Restart Game 🔄"; 
+                resetLevelBtn.disabled = false;
+                nextLevelBtn.style.display = 'none';
+                p.loop(); 
+            }
+            
+            function updateLevelDisplay() {
+                levelDisplayEl.textContent = `Level: ${currentLevelIndex + 1}/${totalLevels}`;
+            }
+
+            function gameWonAllLevels() {
+                gameActive = false;
+                playerReachedEnd = true; 
+                feedbackArea.textContent = "Amazing! You've guided him home through all levels! 🏆🏠";
+                levelDisplayEl.textContent = "Game Complete!";
+                startGameBtn.textContent = "Play Again? ✨";
+                resetLevelBtn.disabled = true;
+                nextLevelBtn.style.display = 'none';
+                startCelebration(); 
+                p.redraw();
+            }
+            
+            function drawMan(x, y, manColor) {
+                const headRadius = playerRadius * 0.7;
+                const bodyHeight = playerRadius * 1.2;
+                const bodyWidth = playerRadius * 0.8;
+                const caneLength = playerRadius * 1.5;
+                const caneOffsetX = playerRadius * 0.6;
+
+                p.fill(manColor);
+                // Body (rectangle)
+                p.rectMode(p.CENTER);
+                // Darker shade for body for contrast
+                let bodyColor = p.lerpColor(manColor, p.color(0), 0.2); // Darken the manColor
+                p.fill(bodyColor);
+                p.rect(x, y + headRadius * 0.5, bodyWidth, bodyHeight, 3); // Rounded body
+                
+                // Head (circle)
+                p.fill(manColor);
+                p.ellipse(x, y - headRadius * 0.3, headRadius * 2, headRadius * 2); 
+                
+                // Cane
+                p.stroke(manColor);
+                p.strokeWeight(3); // Thicker cane
+                p.line(x + caneOffsetX, y - headRadius * 0.2, x + caneOffsetX + playerRadius * 0.3, y + caneLength * 0.8);
+                p.noStroke();
+                p.rectMode(p.CORNER); // Reset rectMode
+            }
+
+            function drawHouse(x, y, houseColor) {
+                const baseWidth = 35;
+                const baseHeight = 30;
+                const roofHeight = 20;
+                const chimneyWidth = 8;
+                const chimneyHeight = 12;
+                const windowSize = 8;
+
+                // House Body (darker shade)
+                let bodyHouseColor = p.lerpColor(houseColor, p.color(0), 0.15);
+                p.fill(bodyHouseColor);
+                p.rectMode(p.CENTER);
+                p.rect(x, y + roofHeight/2, baseWidth, baseHeight, 3); // Slightly rounded corners
+
+                // Roof (original house color)
+                p.fill(houseColor);
+                p.triangle(
+                    x - baseWidth/2, y - baseHeight/2 + roofHeight/2, 
+                    x + baseWidth/2, y - baseHeight/2 + roofHeight/2, 
+                    x, y - baseHeight/2 - roofHeight + roofHeight/2
+                );
+                
+                // Chimney (darker than roof)
+                let chimneyColor = p.lerpColor(houseColor, p.color(0), 0.3);
+                p.fill(chimneyColor);
+                p.rect(x + baseWidth/4, y - baseHeight/2 - roofHeight/2, chimneyWidth, chimneyHeight);
+
+                // Door (contrast with body)
+                p.fill(C_BG); 
+                p.rect(x, y + baseHeight*0.3 + roofHeight/2, 10, 15, 2); // Rounded door
+
+                // Window (contrast with body)
+                p.fill(C_BG);
+                p.rect(x - baseWidth/4, y - baseHeight/4 + roofHeight/2, windowSize, windowSize, 1); // Left window
+                // p.rect(x + baseWidth/4, y - baseHeight/4 + roofHeight/2, windowSize, windowSize, 1); // Right window (optional)
+
+                p.rectMode(p.CORNER); // Reset rectMode
+            }
+
+            function drawCelebration() {
+                if (!celebratingLevelWin || !endPoint) return;
+
+                for (let i = sparkles.length - 1; i >= 0; i--) {
+                    let s = sparkles[i];
+                    s.x += s.vx;
+                    s.y += s.vy;
+                    s.alpha -= (255 / celebrationDuration); 
+                    
+                    if (s.alpha <= 0) {
+                        sparkles.splice(i, 1);
+                    } else {
+                        p.fill(p.lerpColor(C_SUCCESS, C_FEEDBACK_WARM, p.random(1)), s.alpha); 
+                        p.ellipse(s.x, s.y, s.size, s.size);
+                    }
+                }
+                celebrationTimer--;
+                if (celebrationTimer <= 0) {
+                    celebratingLevelWin = false;
+                    if (currentLevelIndex < totalLevels - 1 && playerReachedEnd) { 
+                        nextLevelBtn.style.display = 'inline-block';
+                    }
+                     resetLevelBtn.disabled = true; 
+                }
+            }
+
+
+            p.draw = () => {
+                p.background(C_BG); 
+
+                if (!gameActive) { 
+                    if (playerReachedEnd && levelsData.length > 0 && endPoint) { 
+                        drawHouse(endPoint.x, endPoint.y, C_HOUSE);
+                        drawMan(playerPos.x, playerPos.y, C_SUCCESS); 
+                        if (celebratingLevelWin) {
+                            drawCelebration();
+                        }
+                    } else if (startPoint) { 
+                         p.fill(C_START_MARKER);
+                         p.ellipse(startPoint.x, startPoint.y, goalProximity * 1.5, goalProximity * 1.5);
+                         drawMan(playerPos.x, playerPos.y, C_MAN); 
+                    }
+                    return; 
+                }
+                
+                p.fill(C_START_MARKER); 
+                p.ellipse(startPoint.x, startPoint.y, goalProximity * 1.5, goalProximity * 1.5); 
+                
+                let playerDrawColor = C_MAN; 
+                let closestDist = Infinity;
+                if (mazePath.length > 1) {
+                    for (let i = 0; i < mazePath.length - 1; i++) {
+                        let d = distToSegment(playerPos, mazePath[i], mazePath[i+1]);
+                        if (d < closestDist) closestDist = d;
+                    }
+                }
+
+                if (closestDist < currentPathThickness / 2) {
+                    feedbackArea.textContent = "He's on the right path! (Hot 🔥)";
+                    playerDrawColor = C_FEEDBACK_WARM; 
+                } else if (closestDist < currentPathThickness * 2) {
+                    feedbackArea.textContent = "Getting warmer... 😊";
+                    playerDrawColor = p.lerpColor(C_FEEDBACK_COLD, C_FEEDBACK_WARM, p.map(closestDist, currentPathThickness * 2, currentPathThickness / 2, 0, 1));
+                } else if (closestDist < currentPathThickness * 5) {
+                    feedbackArea.textContent = "A bit chilly, adjust course. 🥶";
+                     playerDrawColor = C_FEEDBACK_COLD; 
+                } else {
+                    feedbackArea.textContent = "He's lost in the cold! ❄️";
+                    playerDrawColor = C_FEEDBACK_COLD; 
+                }
+                
+                drawMan(playerPos.x, playerPos.y, playerDrawColor);
+
+                if (p.dist(playerPos.x, playerPos.y, endPoint.x, endPoint.y) < goalProximity) {
+                    playerReachedEnd = true;
+                    gameActive = false; 
+                    startCelebration(); 
+                    
+                    if (currentLevelIndex < totalLevels - 1) {
+                        feedbackArea.textContent = `Level ${currentLevelIndex + 1} Complete! He made it! 🎉`;
+                    } else {
+                         feedbackArea.textContent = "Amazing! You've guided him home through all levels! 🏆🏠"; 
+                         levelDisplayEl.textContent = "Game Complete!";
+                         startGameBtn.textContent = "Play Again? ✨";
+                    }
+                    p.redraw(); 
+                }
+            };
+
+            p.mousePressed = () => {
+                if (!gameActive || playerReachedEnd || celebratingLevelWin) return; 
+                if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
+                    Tone.start();
+                }
+                if (p.mouseX > 0 && p.mouseX < p.width && p.mouseY > 0 && p.mouseY < p.height) {
+                    if (p.dist(p.mouseX, p.mouseY, playerPos.x, playerPos.y) < playerRadius * 2.5) { // Increased activation area
+                        dragging = true;
+                        playSound('drag_start', 'C3', '32n'); // Play drag start sound
+                    }
+                }
+            };
+
+            p.mouseDragged = () => {
+                if (dragging && gameActive && !playerReachedEnd && !celebratingLevelWin) {
+                    playerPos.x = p.constrain(p.mouseX, 0, p.width);
+                    playerPos.y = p.constrain(p.mouseY, 0, p.height);
+                }
+            };
+
+            p.mouseReleased = () => {
+                dragging = false;
+            };
+            
+            function distToSegment(point, v, w) {
+                let l2 = p5.Vector.sub(v, w).magSq(); 
+                if (l2 === 0) return p5.Vector.sub(point, v).magSq(); 
+                let t = ((point.x - v.x) * (w.x - v.x) + (point.y - v.y) * (w.y - v.y)) / l2;
+                t = p.max(0, p.min(1, t));
+                const projection = p.createVector(v.x + t * (w.x - v.x), v.y + t * (w.y - v.y));
+                return p.dist(point.x, point.y, projection.x, projection.y); 
+            }
+
+            p.startGame = () => { loadLevel(0); };
+            p.restartCurrentLevel = () => { if (levelsData.length > 0 && !celebratingLevelWin) loadLevel(currentLevelIndex); }; 
+            p.goToNextLevel = () => { if (currentLevelIndex < totalLevels - 1 && !celebratingLevelWin) loadLevel(currentLevelIndex + 1);};
+            
+
+            p.windowResized = () => {
+                const canvasWidth = canvasContainer.offsetWidth;
+                const canvasHeight = canvasContainer.offsetHeight;
+                p.resizeCanvas(canvasWidth, canvasHeight);
+                p.updateThemeColors(); 
+                defineLevels(); 
+
+                if(gameActive || playerReachedEnd) { 
+                    loadLevel(currentLevelIndex); 
+                    feedbackArea.textContent = "Screen resized. Level restarted.";
+                } else {
+                    if (playerPos) playerPos.set(p.width / 2, p.height / 2); 
+                    p.redraw();
+                }
+            };
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            sketchInstance = new p5(sketch, 'mazeCanvasContainer'); 
+
+            function handleButtonClick(action, soundNote = 'C4', soundDuration = '16n') {
+                 // Ensure Tone.js context is started by user gesture if not already
+                if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
+                    Tone.start().then(() => {
+                        playSound('click', soundNote, soundDuration);
+                        if (sketchInstance && sketchInstance[action]) {
+                            sketchInstance[action]();
+                        }
+                    });
+                } else {
+                    playSound('click', soundNote, soundDuration);
+                    if (sketchInstance && sketchInstance[action]) {
+                        sketchInstance[action]();
+                    }
+                }
+            }
+
+            startGameBtn.addEventListener('click', () => handleButtonClick('startGame', 'E4'));
+            resetLevelBtn.addEventListener('click', () => handleButtonClick('restartCurrentLevel', 'D4'));
+            nextLevelBtn.addEventListener('click', () => handleButtonClick('goToNextLevel', 'F4'));
+        });
+    </script>
+</body>
+</html>
